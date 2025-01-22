@@ -2,8 +2,10 @@
 
 from app import app
 from flask import request
+import uuid
 
-items = []
+# Dictionary to store items with their UUIDs as keys
+items = {}
 
 @app.route('/')
 def hello():
@@ -11,32 +13,34 @@ def hello():
 
 @app.route('/items', methods=['GET'])
 def get_items():
-    return {'items': [{'id': i + 1, **item} for i, item in enumerate(items)]}
+    return {'items': [{'id': item_id, **item} for item_id, item in items.items()]}
 
-@app.route('/items/<int:item_id>', methods=['GET'])
+@app.route('/items/<string:item_id>', methods=['GET'])
 def get_item(item_id):
-    if item_id < 1:
-        return {'error': 'Item not found'}, 404
-    list_index = item_id - 1
-    if list_index < len(items):
-        return {'item': {'id': item_id, **items[list_index]}}
-    else:
-        return {'error': 'Item not found'}, 404
+    try:
+        # Validate UUID format
+        uuid.UUID(item_id)
+        if item_id in items:
+            return {'item': {'id': item_id, **items[item_id]}}
+    except ValueError:
+        pass
+    return {'error': 'Item not found'}, 404
 
 @app.route('/items', methods=['POST'])
 def add_item():
     item = request.get_json()
-    items.append(item)
-    item_id = len(items)  # One-based index
+    item_id = str(uuid.uuid4())
+    items[item_id] = item
     return {'message': 'Item added successfully', 'item': {'id': item_id, **item}}, 201
 
-@app.route('/items/<int:item_id>', methods=['DELETE'])
+@app.route('/items/<string:item_id>', methods=['DELETE'])
 def delete_item(item_id):
-    if item_id < 1:
-        return {'error': 'Item not found'}, 404
-    list_index = item_id - 1
-    if list_index < len(items):
-        deleted_item = items.pop(list_index)
-        return {'message': 'Item deleted successfully', 'item': {'id': item_id, **deleted_item}}, 200
-    else:
-        return {'error': 'Item not found'}, 404
+    try:
+        # Validate UUID format
+        uuid.UUID(item_id)
+        if item_id in items:
+            deleted_item = items.pop(item_id)
+            return {'message': 'Item deleted successfully', 'item': {'id': item_id, **deleted_item}}, 200
+    except ValueError:
+        pass
+    return {'error': 'Item not found'}, 404
