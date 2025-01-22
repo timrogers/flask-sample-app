@@ -19,7 +19,10 @@ class TestAppRoutes(unittest.TestCase):
     def test_add_item_route(self):
         response = self.app.post('/items', json={"name": "item1"})
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.get_json(), {'message': 'Item added successfully'})
+        self.assertEqual(response.get_json(), {
+            'message': 'Item added successfully',
+            'item': {'id': 0, 'name': 'item1'}
+        })
 
     def test_get_item_route(self):
         # First add an item
@@ -28,7 +31,7 @@ class TestAppRoutes(unittest.TestCase):
         # Then get it
         response = self.app.get('/items/0')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), {'item': {'name': 'item1'}})
+        self.assertEqual(response.get_json(), {'item': {'id': 0, 'name': 'item1'}})
 
     def test_get_nonexistent_item_route(self):
         response = self.app.get('/items/1')
@@ -44,7 +47,7 @@ class TestAppRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), {
             'message': 'Item deleted successfully',
-            'item': {'name': 'item_to_delete'}
+            'item': {'id': 0, 'name': 'item_to_delete'}
         })
         
         # Verify it's gone
@@ -55,6 +58,19 @@ class TestAppRoutes(unittest.TestCase):
         response = self.app.delete('/items/999')
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json(), {'error': 'Item not found'})
+
+    def test_get_items_includes_ids(self):
+        # Add a couple of items
+        self.app.post('/items', json={"name": "item1"})
+        self.app.post('/items', json={"name": "item2"})
+        
+        # Get the list
+        response = self.app.get('/items')
+        self.assertEqual(response.status_code, 200)
+        items = response.get_json()['items']
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0], {'id': 0, 'name': 'item1'})
+        self.assertEqual(items[1], {'id': 1, 'name': 'item2'})
 
 if __name__ == '__main__':
     unittest.main()
