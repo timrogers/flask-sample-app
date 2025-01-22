@@ -25,3 +25,11 @@ def add_item():
     item = request.get_json()
     items.append(item)
     return {'message': 'Item added successfully'}, 201
+
+@app.route('/items/<int:item_id>', methods=['DELETE'])
+def delete_item(item_id):
+    if item_id < len(items):
+        deleted_item = items.pop(item_id)
+        return {'message': 'Item deleted successfully', 'item': deleted_item}, 200
+    else:
+        return {'error': 'Item not found'}, 404

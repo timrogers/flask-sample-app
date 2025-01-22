@@ -7,6 +7,9 @@ class TestAppRoutes(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
+        # Clear the items list before each test
+        from app.routes import items
+        items.clear()
 
     def test_hello_route(self):
         response = self.app.get('/')
@@ -19,12 +22,37 @@ class TestAppRoutes(unittest.TestCase):
         self.assertEqual(response.get_json(), {'message': 'Item added successfully'})
 
     def test_get_item_route(self):
+        # First add an item
+        self.app.post('/items', json={"name": "item1"})
+        
+        # Then get it
         response = self.app.get('/items/0')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), {'item': {'name': 'item1'}})
 
     def test_get_nonexistent_item_route(self):
         response = self.app.get('/items/1')
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json(), {'error': 'Item not found'})
+
+    def test_delete_item_route(self):
+        # First add an item
+        self.app.post('/items', json={"name": "item_to_delete"})
+        
+        # Then delete it
+        response = self.app.delete('/items/0')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {
+            'message': 'Item deleted successfully',
+            'item': {'name': 'item_to_delete'}
+        })
+        
+        # Verify it's gone
+        response = self.app.get('/items/0')
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_nonexistent_item_route(self):
+        response = self.app.delete('/items/999')
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json(), {'error': 'Item not found'})
 
