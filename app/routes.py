@@ -23,8 +23,13 @@ def get_item(item_id):
 @app.route('/items', methods=['POST'])
 def add_item():
     item = request.get_json()
+    if not item or 'title' not in item:
+        return {'error': 'Title is required'}, 400
+    
+    # Set completed to False by default if not provided
     if 'completed' not in item:
         item['completed'] = False
+    
     items.append(item)
     return {'message': 'Item added successfully'}, 201
 

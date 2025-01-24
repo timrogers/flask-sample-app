@@ -7,6 +7,9 @@ class TestAppRoutes(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
+        # Clear items before each test
+        from app.routes import items
+        items.clear()
 
     def test_hello_route(self):
         response = self.app.get('/')
@@ -14,14 +17,17 @@ class TestAppRoutes(unittest.TestCase):
         self.assertEqual(response.data.decode('utf-8'), "Hello, Flask!")
 
     def test_add_item_route(self):
-        response = self.app.post('/items', json={"name": "item1"})
+        response = self.app.post('/items', json={"title": "item1"})
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.get_json(), {'message': 'Item added successfully'})
 
     def test_get_item_route(self):
+        # First create an item
+        self.app.post('/items', json={"title": "item1"})
+        # Then get it
         response = self.app.get('/items/0')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), {'item': {'name': 'item1'}})
+        self.assertEqual(response.get_json(), {'item': {'title': 'item1', 'completed': False}})
 
     def test_get_nonexistent_item_route(self):
         response = self.app.get('/items/1')
