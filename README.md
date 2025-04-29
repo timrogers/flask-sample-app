@@ -65,7 +65,8 @@ The application provides the following routes:
 - `GET /`: Returns a simple greeting message.
 - `GET /items`: Returns a list of items.
 - `GET /items/{item_id}`: Returns the details of a specific item.
-- `POST /items`: Adds a new item to the list.
+- `POST /items`: Adds a new item to the list. Items are created with a `completed` status of `false` by default.
+- `PATCH /items/{item_id}/complete`: Marks a specific item as completed by setting its `completed` status to `true`.
 
 ## Testing
 
